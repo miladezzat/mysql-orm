@@ -1,0 +1,6 @@
+test
+node_modules
+.nyc_output
+.github
+.git
+coverage
