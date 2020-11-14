@@ -5,39 +5,14 @@ module.exports = {
     title: ' Schema',
 
     type: 'object',
-    additionalProperties: false,    
-    required: ['developerName'],
+    additionalProperties: false,        
     properties: {
-        developerName: {
+        name: {
             $ref: '#/definitions/non_empty_string',
         },
-        developerNameAr: {
+        email: {
             $ref: '#/definitions/non_empty_string',
-        },
-        compoundName: {
-            $ref: '#/definitions/non_empty_string',
-        },
-        phaseName: {
-            $ref: '#/definitions/non_empty_string',
-        },
-        unitDesign: {
-            $ref: '#/definitions/non_empty_string',
-        },
-        unitId: {
-            $ref: '#/definitions/non_empty_string',
-        },
-        description: {
-            $ref: '#/definitions/non_empty_string', 
-        },
-        totalPrice: {
-            $ref: '#/definitions/positive_number',
-        },
-        slug: {
-            $ref: '#/definitions/non_empty_string',
-        },
-        slugAr: {
-            $ref: '#/definitions/non_empty_string',
-        },
+        },        
         isDeleted: {
             $ref: '#/definitions/boolean_type',
         },
