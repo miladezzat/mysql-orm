@@ -74,6 +74,7 @@ class Decorator {
             throw new DecoratorInternalError(error.message);
         }
     }
+
 }
 
 module.exports = Decorator;

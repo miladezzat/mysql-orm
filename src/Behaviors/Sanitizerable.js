@@ -16,7 +16,7 @@ class SanitizerableIllegalArgumentError extends Error {
 class Sanitizerable {
 
     constructor(paths) {
-        if (!_.isArray(paths) || _.isEmpty(paths)) {
+        if(!_.isArray(paths) || _.isEmpty(paths)) {
             throw new SanitizerableIllegalArgumentError('missing or invalid paths');
         }
 
@@ -24,7 +24,7 @@ class Sanitizerable {
     }
 
     beforeInsertOne(doc) {
-        if (!_.isPlainObject(doc)) {
+        if(!_.isPlainObject(doc)) {
             throw new SanitizerableIllegalArgumentError('missing doc or invalid');
         }
         _.map(this.paths, path => {
@@ -36,7 +36,7 @@ class Sanitizerable {
     _removeHTMLTags(doc, path) {
         const value = _.get(doc, path);
         const data = _.isString(value) ? striptags(value.trim()) : null;
-        if (data) {
+        if(data) {
             _.set(doc, path, sanitizer.sanitize(data.trim()));
         }
     }

@@ -14,7 +14,7 @@ class FormattableIllegalArgumentError extends Error {
 class Formattable {
 
     constructor(formatters) {
-        if (!_.isPlainObject(formatters) || _.isNil(formatters)) {
+        if(!_.isPlainObject(formatters) || _.isNil(formatters)) {
             throw new FormattableIllegalArgumentError('missing or invalid formatters');
         }
 
@@ -22,12 +22,13 @@ class Formattable {
     }
 
     beforeInsertOne(doc) {
-        if (!_.isNil(this.formatters.create)) {
+        if(!_.isNil(this.formatters.create)) {
             return Promise.resolve(this.formatters.create(doc));
         }
 
         return Promise.resolve(doc);
     }
+
 }
 
 module.exports = Formattable;
