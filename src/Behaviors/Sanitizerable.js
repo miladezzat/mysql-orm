@@ -31,13 +31,14 @@ class Sanitizerable {
             this._removeHTMLTags(doc, path);
         });
         return Promise.resolve(doc);
-    }    
+    }
+
     _removeHTMLTags(doc, path) {
         const value = _.get(doc, path);
         const data = _.isString(value) ? striptags(value.trim()) : null;
         if(data) {
             _.set(doc, path, sanitizer.sanitize(data.trim()));
-        } 
+        }
     }
 
 }

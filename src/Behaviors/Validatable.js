@@ -38,7 +38,7 @@ class Validatable {
     beforeInsertOne(doc) {
         return this.validator.validate(this._omit(doc));
     }
-  
+    
     _omit(doc) {
         return _.omit(doc, this.omittableFields);
     }

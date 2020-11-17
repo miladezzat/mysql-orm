@@ -1,8 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-const httpStatus = require('http-status-codes');
-const{ v4: uuidv4 } = require('uuid');
+const QueryBuilder = require('./QueryBuilder');
 class DecoratorIllegalArgumentError extends Error {
 
     constructor(message) {
@@ -31,47 +30,59 @@ class DecoratorNotFoundError extends Error {
 }
 class Decorator {
 
-    constructor(elasticClient, behaviors, indexName) {
-        if(_.isNil(elasticClient) || !_.isArray(behaviors) || _.isEmpty(behaviors)) {
-            throw new DecoratorIllegalArgumentError('invalid elasticClient or behaviors');
+    constructor(connection, behaviors, tableName, tableDefinition) {
+        if(_.isNil(connection) || _.isNil(tableName) || !_.isArray(behaviors)) {
+            throw new DecoratorIllegalArgumentError('invalid collection or behaviors');
         }
 
-        this.elasticClient = elasticClient;
+        this.connection = connection;
         this.behaviors = behaviors;
-        this.indexName = indexName;
+        this.tableName = tableName;
+        this.queryBuilder = new QueryBuilder(tableName);
+        this.queryBuilder.createTable(tableDefinition, connection);
     }
 
     async insertOne(doc) {
-        if(_.isNil(doc) || _.isEmpty(doc)) {
-            throw new DecoratorIllegalArgumentError('invalid document');
-        }
-
-        for(const aBehavior of this.behaviors) {
-            if(!_.isNil(aBehavior.beforeInsertOne)) {
-                await aBehavior.beforeInsertOne(doc);
-            }
+        if(!_.isPlainObject(doc) || _.isEmpty(doc)) {
+            throw new DecoratorIllegalArgumentError('invalid or missing document');
         }
 
         try {
-            const id = uuidv4();
-            const result = await this.elasticClient.index({
-                index: this.indexName,
-                id,
-                body: { id, ...doc },
-            });
-
-            if(result.statusCode === httpStatus.CREATED) {
-                return {
-                    id: result.body._id,
-                    ...doc,
-                };
-            } else {
-                const error = new DecoratorInternalError('document not created');
-                error.details = result.body;
-                throw error;
+            for(const aBehavior of this.behaviors) {
+                if(!_.isNil(aBehavior.beforeInsertOne)) {
+                    await aBehavior.beforeInsertOne(doc);
+                }
             }
+            const sql = await this.queryBuilder.createInsertQuery(doc);
+            const result = await this.connection.query(sql);
+            return { result, doc };
         } catch(error) {
-            throw new DecoratorInternalError(error.message);
+            throw new DecoratorIllegalArgumentError(error.message);
+        }
+    }
+
+    async find(query) {
+        try {
+            for(const aBehavior of this.behaviors) {
+                if(!_.isNil(aBehavior.beforeFind)) {
+                    await aBehavior.beforeFind(query);
+                }
+            }
+            const sql = query ? query : `SELECT * FROM ${this.tableName}`;
+            const[rows] = await this.connection.query(sql);
+            return rows;
+        } catch(error) {
+            throw new DecoratorIllegalArgumentError(error.message);
+        }
+    }
+
+    async findById(id) {
+        try {
+            const sql = `SELECT * FROM ${this.tableName} WHERE id='${id}'`;
+            const[rows] = await this.connection.query(sql);
+            return rows[0];
+        } catch(error) {
+            throw new DecoratorIllegalArgumentError(error.message);
         }
     }
 

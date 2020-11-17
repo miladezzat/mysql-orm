@@ -17,19 +17,10 @@ class SoftDeleteable {
     beforeRemoveOne(doc) {
         _.set(doc, this.isDeleteField, true);
         _.set(doc, this.deleteTimestampField, moment().format(TIMESTAMP_FORMAT));
-        
+
         return Promise.resolve(doc);
     }
-
-    beforeRemoveMany(docs) {
-        _.map(docs, doc => {
-            _.set(doc, this.isDeleteField, true);
-            _.set(doc, this.deleteTimestampField, moment().format(TIMESTAMP_FORMAT));
-        });
-        
-        return Promise.resolve(docs);
-    }
-
+    
 }
 
 module.exports = SoftDeleteable;
