@@ -40,11 +40,11 @@ class QueryBuilder {
             throw new QueryBuilderIllegalArgumentError(error.message);
         }        
     }
-
+    
     async createTable(definition, connection) {
         if(definition) {            
             try {
-                const sql = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${definition})`;
+                const sql = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${definition})`;                
                 await connection.execute(sql);                
             } catch(error) {
                 throw new QueryBuilderIllegalArgumentError(error.message);
