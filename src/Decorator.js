@@ -1,8 +1,6 @@
 'use strict';
 
 const _ = require('lodash');
-const httpStatus = require('http-status-codes');
-const{ v4: uuidv4 } = require('uuid');
 class DecoratorIllegalArgumentError extends Error {
 
     constructor(message) {
@@ -31,48 +29,28 @@ class DecoratorNotFoundError extends Error {
 }
 class Decorator {
 
-    constructor(collection, behaviors, indexName) {
-        if(_.isNil(collection) || !_.isArray(behaviors) || _.isEmpty(behaviors)) {
+    constructor(connection, behaviors, tableName) {
+        if(_.isNil(connection) || _.isNil(tableName) || !_.isArray(behaviors) || _.isEmpty(behaviors)) {
             throw new DecoratorIllegalArgumentError('invalid collection or behaviors');
         }
 
-        this.collection = collection;
+        this.connection = connection;
         this.behaviors = behaviors;
-        this.indexName = indexName;
+        this.tableName = tableName;
     }
 
-    async insertOne(doc) {
-        if(_.isNil(doc) || _.isEmpty(doc)) {
-            throw new DecoratorIllegalArgumentError('invalid document');
+    async insertOne(sql) {
+        if(_.isNil(sql)) {
+            throw new DecoratorIllegalArgumentError('missing sql');
         }
 
         for(const aBehavior of this.behaviors) {
             if(!_.isNil(aBehavior.beforeInsertOne)) {
-                await aBehavior.beforeInsertOne(doc);
+                await aBehavior.beforeInsertOne(sql);
             }
         }
-
-        try {
-            const id = uuidv4();
-            const result = await this.collection.index({
-                index: this.indexName,
-                id,
-                body: { id, ...doc },
-            });
-
-            if(result.statusCode === httpStatus.CREATED) {
-                return {
-                    id: result.body._id,
-                    ...doc,
-                };
-            } else {
-                const error = new DecoratorInternalError('document not created');
-                error.details = result.body;
-                throw error;
-            }
-        } catch(error) {
-            throw new DecoratorInternalError(error.message);
-        }
+        
+        const result = await this.connection.query(sql);
     }
 
 }
