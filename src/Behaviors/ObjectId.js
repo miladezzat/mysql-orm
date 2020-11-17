@@ -3,25 +3,25 @@
 const _ = require('lodash');
 const{ v4: uuid } = require('uuid');
 
-class FormattableIllegalArgumentError extends Error {
+class ObjectIdIllegalArgumentError extends Error {
 
     constructor(message) {
         super(message);
-        this.name = 'FormattableIllegalArgument';
+        this.name = 'ObjectIdIllegalArgument';
     }
 
 }
 
-class Formattable {
+class ObjectId {
 
     beforeInsertOne(doc) {
-        _.set(doc, 'id', uuid);
+        _.set(doc, 'id', uuid());
         return Promise.resolve(doc);
     }
 
 }
 
-module.exports = Formattable;
+module.exports = ObjectId;
 module.exports.Errors = {
-    FormattableIllegalArgumentError,
+    ObjectIdIllegalArgumentError,
 };

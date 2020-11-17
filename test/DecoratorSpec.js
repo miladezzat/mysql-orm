@@ -1,24 +1,27 @@
 'use strict';
 
+const _ = require('lodash');
 const{ createConnection } = require('./databaseSetup');
-const{ v4: uuid } = require('uuid');
+const Decorator = require('../src/Decorator');
+const{ Timestampable, ObjectId } = require('../src/Behaviors');
 
 describe.only('Decorator', () => {
     let connection;
+    let decorator;
 
     before(async() => {
-        connection = await createConnection();
+        connection = await createConnection();        
+
+        decorator = new Decorator(connection, [
+            new Timestampable(),
+            new ObjectId(),
+        ], 'customer');
     });
+
     describe('test', () => {
         it('should insert row successfully', async() => {
-            const sql = `INSERT INTO customer (id, name) VALUES ('${uuid()}', 'Milad E. Fahmy')`;
-            const sql2 = 'select * from customer';
-            try {
-                const[rows] = await connection.execute(sql2);
-                console.log(rows[0].id);
-            } catch(error) {
-                console.log('error', error);
-            }
+            const result = await decorator.insertOne({ firstName: 'milad' });
+            console.log(result);
         });
     });
 });

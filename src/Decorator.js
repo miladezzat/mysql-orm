@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const QueryBuilder = require('./QueryBuilder');
 class DecoratorIllegalArgumentError extends Error {
 
     constructor(message) {
@@ -29,28 +30,35 @@ class DecoratorNotFoundError extends Error {
 }
 class Decorator {
 
-    constructor(connection, behaviors, tableName) {
-        if(_.isNil(connection) || _.isNil(tableName) || !_.isArray(behaviors) || _.isEmpty(behaviors)) {
+    constructor(connection, behaviors, tableName, tableDefinition) {
+        if(_.isNil(connection) || _.isNil(tableName) || !_.isArray(behaviors)) {
             throw new DecoratorIllegalArgumentError('invalid collection or behaviors');
         }
 
         this.connection = connection;
         this.behaviors = behaviors;
-        this.tableName = tableName;
+        this.tableName = tableName;        
+        this.queryBuilder = new QueryBuilder(tableName);
+        this.queryBuilder.createTable(tableDefinition, connection);
     }
 
-    async insertOne(sql) {
-        if(_.isNil(sql)) {
-            throw new DecoratorIllegalArgumentError('missing sql');
+    async insertOne(doc) {
+        if(!_.isPlainObject(doc) || _.isEmpty(doc)) {
+            throw new DecoratorIllegalArgumentError('invalid or missing document');
         }
 
-        for(const aBehavior of this.behaviors) {
-            if(!_.isNil(aBehavior.beforeInsertOne)) {
-                await aBehavior.beforeInsertOne(sql);
+        try {
+            for(const aBehavior of this.behaviors) {
+                if(!_.isNil(aBehavior.beforeInsertOne)) {
+                    await aBehavior.beforeInsertOne(doc);
+                }
             }
+            const sql = await this.queryBuilder.createInsertQuery(doc);            
+            const result = await this.connection.query(sql);
+            return { result, doc };
+        } catch(error) {
+            throw new DecoratorIllegalArgumentError(error.message);
         }
-        
-        const result = await this.connection.query(sql);
     }
 
 }

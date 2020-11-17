@@ -2,31 +2,54 @@
 
 const _ = require('lodash');
 
-class QueryBuilder {
+class QueryBuilderIllegalArgumentError extends Error {
 
-    constructor(tableName, doc) {
-        this.tableName = tableName;
-        this.document = doc;
+    constructor(message) {
+        super(message);
+        this.name = 'QueryBuilderIllegalArgument';
     }
 
-    createQuery() {
-        let keys = '(';
-        let values = '(';
-        const{ length } = _.keys(this.document);
-        let count = 0;
-        
-        _.map(this.document, (value, key) => {
-            if(count < length - 1) {
-                keys += `${key}, `;
-                values += `${value}, `;
-            } else if(count === length - 1) {
-                keys += `${key})`;
-                values += `${value})`;
-            }
-            count++;
-        });
+}
+class QueryBuilder {
 
-        return { keys, values };
+    constructor(tableName) {        
+        this.tableName = tableName;
+    }
+
+    async createInsertQuery(document) {
+        try {
+            let keys = '(';
+            let values = '(';
+            const{ length } = _.keys(document);
+            let count = 0;
+
+            _.map(document, (value, key) => {
+                if(count < length - 1) {
+                    keys += `${key}, `;
+                    values += `'${value}', `;
+                } else if(count === length - 1) {
+                    keys += `${key})`;
+                    values += `'${value}')`;
+                }
+                count++;
+            });
+
+            const sql = `INSERT INTO ${this.tableName} ${keys} VALUES ${values}`;
+            return sql;
+        } catch(error) {
+            throw new QueryBuilderIllegalArgumentError(error.message);
+        }        
+    }
+
+    async createTable(definition, connection) {
+        if(definition) {            
+            try {
+                const sql = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${definition})`;
+                await connection.execute(sql);                
+            } catch(error) {
+                throw new QueryBuilderIllegalArgumentError(error.message);
+            }
+        }
     }
 
 }

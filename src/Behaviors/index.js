@@ -6,4 +6,5 @@ module.exports = {
     Sanitizerable: require('./Sanitizerable'),
     Validatable: require('./Validatable'),
     SoftDeletable: require('./SoftDeletable'),
+    ObjectId: require('./ObjectId'),
 };
